@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+          content="width=device-width,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+	<title>Document</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		html,body{
+			width: 100%;
+			max-width: 640px;
+    		min-width: 320px;
+    		margin: 0 auto;
+		}
+		ul,ol{
+			list-style: none;
+		}
+		.box{
+			width: 100%;
+			position: relative;
+			overflow: hidden;
+		}
+		#slideBox{
+			width: 700%;
+			position: relative;
+			transform: translateX(-14.2857%);
+		}
+		#slideBox>li{
+			float: left;
+			width: 14.2857%;
+			height: 200px;
+		}
+		#slideBox>li>a{
+			display: block;
+			width: 100%;
+			height: 100%;
+		}
+		#slideBox>li>a>img{
+			width: 100%;
+			height: 100%;
+			display: block;
+		}
+		#sign{
+			position: absolute;
+			bottom: 10px;
+			left: 50%;
+			margin-left: -60px;
+		}
+		#sign>li{
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			border: 1px solid #000;
+			float: left;
+			text-align: center;	
+			line-height: 10px;
+			margin-left: 10px;
+		}
+		#sign>li.active{
+			background-color: red;
+		}
+	</style>
+</head>
+<body>
+	<div class="box">
+		<ul id="slideBox">
+			<li><a href="#"><img src="./images/05.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/01.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/02.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/03.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/04.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/05.jpg" alt=""></a></li>
+			<li><a href="#"><img src="./images/01.jpg" alt=""></a></li>
+		</ul>
+		<ol id="sign">
+			
+		</ol>
+	</div>
+</body>
+<script>
+	var ul=document.getElementById('slideBox'),
+		lis=ul.getElementsByTagName('li'),
+		liWidth=lis[0].offsetWidth,
+		sign=document.getElementById('sign'),
+		timeId=null,
+		index=1;
+	//动态创建标记小点	
+	var signHtml='';
+	for (var i=0,len=lis.length-2;i<len;i++) {
+		if(i==0){
+			signHtml+='<li class="active"></li>';
+		}else{
+			signHtml+='<li></li>';
+		}	
+	}
+	sign.innerHTML=signHtml;
+	var signLi=sign.getElementsByTagName('li');
+
+	//设置小点点的样式
+	var signFn=function () {
+		for(var i=0,len=signLi.length;i<len;i++){
+			signLi[i].className='';
+		}
+		if(index>0&&signLi[index-1]){
+			signLi[index-1].className='active';
+		}else{
+			signLi[0].className='active';
+		}
+	}
+
+	//设置过渡
+	var setTransition=function (dom) {
+		dom.style.webkitTransition='all .2s';
+		dom.style.transition='all .2s';
+	}
+
+	//删除过渡
+	var removeTransition=function (dom) {
+		dom.style.webkitTransition='none';
+		dom.style.transition='none';
+	}
+
+	//设置偏移
+	var setTransform=function (dom,distance) {
+		dom.style.webkitTransform='translateX('+distance+'px)';
+		dom.style.transform='translateX('+distance+'px)';
+	}
+
+	//自动轮播
+	var autoSlide = function () {
+		clearInterval(timeId);
+		timeId=setInterval(function () {
+			index++;
+			setTransition(ul);
+			setTransform(ul,-liWidth*index);
+		},2000);
+	}
+	autoSlide();
+
+	//判断index
+	var cd = function () {
+		// console.log(index);
+		if(index==lis.length-1){
+			index=1;
+			removeTransition(ul);
+			setTransform(ul,-index*liWidth);
+		}else if(index==0){
+			index=lis.length-2;
+			removeTransition(ul);
+			setTransform(ul,-index*liWidth);
+		}
+		signFn();
+	}
+
+	//每次过渡结束完会自动调用此函数
+	function addTransitionEnd(dom,callback) {
+		if(dom && typeof dom ==='object'){
+			dom.addEventListener('webkitTransitionEnd',function () {
+				callback&&callback();
+			});
+			dom.addEventListener('transitionEnd',function () {
+				callback&&callback();
+			});
+		}
+	}
+	addTransitionEnd(ul,cd);
+
+	//触摸滑动
+	var startX=0,
+		moveX=0,
+		distance=0;
+	ul.addEventListener('touchstart',function (e) {
+		clearInterval(timeId);
+		startX=e.touches[0].clientX;
+	});	
+	ul.addEventListener('touchmove',function (e) {
+		moveX=e.touches[0].clientX;
+		distance=moveX-startX;
+		removeTransition(ul);
+		//原来的位置加上move的距离;
+		setTransform(ul,-index*liWidth+distance);
+	});
+	ul.addEventListener('touchend',function (e) {
+		//判断move的距离是不是大于liWidth/3
+		if(Math.abs(distance)>liWidth/3){
+			if(distance<0){
+				index++;	
+			}else{
+				index--;
+			}
+			setTransition(ul);
+			setTransform(ul,-index*liWidth);
+		}else{
+			setTransition(ul);
+			setTransform(ul,-index*liWidth);
+		}
+		signFn();
+		autoSlide();
+	});	
+</script>
+</html>
